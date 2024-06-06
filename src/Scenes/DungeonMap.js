@@ -11,7 +11,7 @@ class DungeonMap extends Phaser.Scene {
 
     create() {
         const MAP_SIZE = 62; // Size of the map in tiles
-        const GRID_SIZE = 2; // Number of rooms along each axis
+        const GRID_SIZE = 3; // Number of rooms along each axis
         this.TILE_FLOOR = 48;
         this.TILE_FLOOR_ALT = 49;
         this.TILE_WALL = 40;
