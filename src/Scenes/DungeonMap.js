@@ -11,7 +11,7 @@ class DungeonMap extends Phaser.Scene {
 
     create() {
         const MAP_SIZE = 62; // Size of the map in tiles
-        const GRID_SIZE = 5; // Number of rooms along each axis
+        const GRID_SIZE = 2; // Number of rooms along each axis
         this.TILE_FLOOR = 48;
         this.TILE_FLOOR_ALT = 49;
         this.TILE_WALL = 40;
@@ -92,13 +92,13 @@ class DungeonMap extends Phaser.Scene {
         }
     }
 
-
     placeDoor(array, room) {
         // Randomly decide whether to create one door or two doors
         let doorCount = this.getRandomInt(1, 2);
     
         // Create an array to store the door positions for each door
         let doorPositions = [];
+        let doorCoordinates = []; // Store door coordinates
     
         // Generate unique random door positions
         while (doorPositions.length < doorCount) {
@@ -149,12 +149,85 @@ class DungeonMap extends Phaser.Scene {
             }
     
             if (doorX !== 0 && doorY !== 0) {
+                // Store door position along with coordinates
+                doorCoordinates.push({ x: doorX, y: doorY, position: doorPosition });
                 array[doorY][doorX] = this.TILE_FLOOR;
                 // this.createCorridor(array, doorX, doorY);
             }
         }
+    
+        // If no doors were placed, add a door on a random side
+        if (doorCoordinates.length === 0) {
+            let doorPosition = this.getRandomInt(0, 3);
+            let doorX = 0;
+            let doorY = 0;
+    
+            switch (doorPosition) {
+                case 0: //top
+                    doorX = this.getRandomInt(room.x + 1, room.x + room.width - 2);
+                    doorY = room.y - 1;
+                    break;
+                case 1: //right
+                    doorX = room.x + room.width;
+                    doorY = this.getRandomInt(room.y + 1, room.y + room.height - 2);
+                    break;
+                case 2: //bottom
+                    doorX = this.getRandomInt(room.x + 1, room.x + room.width - 2);
+                    doorY = room.y + room.height;
+                    break;
+                case 3: //left
+                    doorX = room.x - 1;
+                    doorY = this.getRandomInt(room.y + 1, room.y + room.height - 2);
+                    break;
+            }
+    
+            // Store door position along with coordinates
+            doorCoordinates.push({ x: doorX, y: doorY, position: doorPosition });
+            array[doorY][doorX] = this.TILE_FLOOR;
+        }
+        this.createCorridors(array, doorCoordinates);
     }
-   
+
+    createCorridors(array, doorCoordinates) {
+        // Loop through all the doors
+        for (let i = 0; i < doorCoordinates.length; i++) {
+            let door = doorCoordinates[i];
+            let x = door.x;
+            let y = door.y;
+            let position = door.position;
+
+            console.log(door);
+    
+            // Create a corridor based on the door's position
+            switch (position) {
+                case 0: // top
+                    while (y > 0 && (array[y - 1] && array[y - 1][x] !== this.TILE_WALL) && array[y - 1][x] !== this.TILE_FLOOR) {
+                        y--;
+                        array[y][x] = this.TILE_FLOOR;
+                    }
+                    break;
+                case 1: // right
+                    while (x < array[0].length - 1 && (array[y] && array[y][x + 1] !== this.TILE_WALL) && array[y][x + 1] !== this.TILE_FLOOR) {
+                        x++;
+                        array[y][x] = this.TILE_FLOOR;
+                    }
+                    break;
+                case 2: // bottom
+                    while (y < array.length - 1 && (array[y + 1] && array[y + 1][x] !== this.TILE_WALL) && array[y + 1][x] !== this.TILE_FLOOR) {
+                        y++;
+                        array[y][x] = this.TILE_FLOOR;
+                    }
+                    break;
+                case 3: // left
+                    while (x > 0 && (array[y] && array[y][x - 1] !== this.TILE_WALL) && array[y][x - 1] !== this.TILE_FLOOR) {
+                        x--;
+                        array[y][x] = this.TILE_FLOOR;
+                    }
+                    break;
+            }
+        }
+    }
+    
     doorExistsOnSide(array, room, side) {
         let doorExists = false;
     
