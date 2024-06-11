@@ -19,8 +19,10 @@
             "scaleInDock": 1.0321
         }
     },
+    "last.exportedFilePath": "/Users/Naitik/CMPM120/FinalGame/assets",
     "last.imagePath": "/Users/Naitik/CMPM120/FinalGame/assets",
     "map.height": 1000,
+    "map.lastUsedExportFilter": "JSON map files (*.tmj *.json)",
     "map.lastUsedFormat": "tmx",
     "map.tileHeight": 16,
     "map.tileWidth": 16,

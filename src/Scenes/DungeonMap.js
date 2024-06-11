@@ -253,7 +253,3 @@ class DungeonMap extends Phaser.Scene {
         // Your update logic here
     }
 }
-
-
-
-
