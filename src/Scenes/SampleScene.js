@@ -28,6 +28,7 @@ class SampleScene extends Phaser.Scene {
         this.physics.add.collider(this.player, this.assassinBoss.attackHitbox, this.handlePlayerBossCollision, null, this);
         this.physics.add.collider(this.player.hitbox, this.assassinBoss, this.handleBossAttackCollision, null, this);
         this.physics.add.collider(this.player, this.bats, this.handlePlayerEnemyCollision, null, this);
+        this.physics.add.collider(this.player.hitbox, this.bats, this.handleBatHitCollision, null, this);
 
     }
 
@@ -42,8 +43,11 @@ class SampleScene extends Phaser.Scene {
     handlePlayerEnemyCollision(player, enemy) {
         player.takeDamage(10);
     }
-    
 
+    handleBatHitCollision(hitbox, bat) {
+        bat.takeDamage(20);
+    }
+    
     update(time, delta) {
         this.player.update(time, delta);
         this.player.stateMachine.step();

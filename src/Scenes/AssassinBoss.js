@@ -4,7 +4,7 @@ class AssassinBoss extends Phaser.Physics.Arcade.Sprite {
         scene.add.existing(this);
         scene.physics.add.existing(this);
         
-        this.health = 1000;
+        this.health = 100;
         this.attackPower = 10;
         this.isStunned = false;
         this.hurtTimer = 250; // in ms
@@ -84,6 +84,9 @@ class BossIdleState extends State {
 
 class BossChaseState extends State {
     execute(scene, boss) {
+        if (boss.health <= 0) {
+            this.stateMachine.transition('death');
+        }
         const player = scene.player;
         scene.physics.moveToObject(boss, player, boss.followSpeed);
         boss.anims.play('assassinRun', true);

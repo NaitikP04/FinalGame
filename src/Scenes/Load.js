@@ -51,12 +51,16 @@ class Load extends Phaser.Scene {
             frameHeight: 64,
         });
         // Load the tileset for enemies
-        this.load.spritesheet('DungeonTileset', 'tilemap_packed.png', {
-            frameWidth: 32,
-            frameHeight: 32,
-        });        
+        // this.load.spritesheet('DungeonTileset', 'tilemap_packed.png', {
+        //     frameWidth: 32,
+        //     frameHeight: 32,
+        // });        
         // this.load.tilemapTiledJSON("map", "dungeonMap..tmj"); // Load JSON of tilemap  
         this.load.image('map', 'map-scroll.jpg')
+        this.load.image('bat', 'bat.png');
+        this.load.image('batAttack1', 'batAttack1.png'); // Frame 1
+        this.load.image('batAttack2', 'batAttack2.png'); // Frame 2
+        this.load.image('ghost', 'ghost.png');
   
     }
 
@@ -137,6 +141,16 @@ class Load extends Phaser.Scene {
             frameRate: 14.67,
             repeat: 0,
             frames: this.anims.generateFrameNumbers('assassinStun', { start: 0, end: 21 }),
+        });
+
+        this.anims.create({
+            key: 'batProjectileAnim',
+            frames: [
+                { key: 'batAttack1' },
+                { key: 'batAttack2' }
+            ],
+            frameRate: 8,
+            repeat: -1
         });
 
         // Proceed once loading completes
