@@ -1,4 +1,3 @@
-
 class Player extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, x, y, texture, frame) {
         super(scene, x, y, texture, frame);
@@ -17,6 +16,14 @@ class Player extends Phaser.Physics.Arcade.Sprite {
         this.health = 100;
         this.isHurt = false;
 
+        this.canDash = true; // Locked by default
+        this.canUseShuriken = true; // Locked by default
+        this.hasUpgradedShuriken = true;
+
+        this.basicShurikenCooldown = 4000;
+        this.upgradedShurikenCooldown = 2000;
+        this.lastShurikenTime = 0;
+
         this.hitbox = scene.add.rectangle(x, y + 5, 30, 10, 0xff0000, 0);
         scene.physics.add.existing(this.hitbox);
         this.hitbox.body.enable = false;
@@ -27,11 +34,12 @@ class Player extends Phaser.Physics.Arcade.Sprite {
             move: new MoveState(),
             swing: new SwingState(),
             dash: new DashState(),
+            shoot: new ShootState(),
         }, [scene, this]);
     }
 
     update(time, delta) {
-        // this.stateMachine.step();
+        this.stateMachine.step();
         this.resetHitbox(); // Reset hitbox position
     }
 
@@ -68,6 +76,58 @@ class Player extends Phaser.Physics.Arcade.Sprite {
             target.takeDamage(20); // Damage amount can be adjusted
         }
     }
+
+    shootShuriken() {
+        const currentTime = this.scene.time.now;
+        const cooldown = this.hasUpgradedShuriken ? this.upgradedShurikenCooldown : this.basicShurikenCooldown;
+        if (!this.canUseShuriken || currentTime - this.lastShurikenTime < cooldown) {
+            return;
+        }
+
+        this.lastShurikenTime = currentTime;
+        const shurikenType = this.hasUpgradedShuriken ? 'shurikenUpgraded' : 'shurikenBasic';
+        const damage = this.hasUpgradedShuriken ? 15 : 5;
+        const piercing = this.hasUpgradedShuriken ? 2 : 1;
+        const speed = 300;
+
+        let velocity = new Phaser.Math.Vector2(0, 0);
+        const { left, right, up, down } = this.scene.keys;
+
+        if (left.isDown) {
+            velocity.x = -speed;
+        }
+        if (right.isDown) {
+            velocity.x = speed;
+        }
+        if (up.isDown) {
+            velocity.y = -speed;
+        }
+        if (down.isDown) {
+            velocity.y = speed;
+        }
+
+        if (velocity.length() === 0) {
+            // Default direction if no keys are pressed
+            velocity.x = this.facing === 'left' ? -speed : speed;
+        }
+
+        velocity.normalize().scale(speed);
+
+        const shuriken = new Shuriken(this.scene, this.x, this.y, shurikenType, damage, piercing, velocity, this.direction);
+        shuriken.setScale(0.6);
+    }
+
+    unlockDash() {
+        this.canDash = true;
+    }
+
+    unlockShuriken() {
+        this.canUseShuriken = true;
+    }
+
+    upgradeShuriken() {
+        this.hasUpgradedShuriken = true;
+    }
 }
 
 // Player-specific state classes
@@ -78,15 +138,20 @@ class IdleState extends State {
     }
 
     execute(scene, player) {
-        const { left, right, up, down, space, shift } = scene.keys;
+        const { left, right, up, down, space, shift, c } = scene.keys;
 
         if (Phaser.Input.Keyboard.JustDown(space)) {
             this.stateMachine.transition('swing');
             return;
         }
 
-        if (Phaser.Input.Keyboard.JustDown(shift)) {
+        if (player.canDash && Phaser.Input.Keyboard.JustDown(shift)) {
             this.stateMachine.transition('dash');
+            return;
+        }
+
+        if (player.canUseShuriken && Phaser.Input.Keyboard.JustDown(c)) {
+            this.stateMachine.transition('shoot');
             return;
         }
 
@@ -99,15 +164,20 @@ class IdleState extends State {
 
 class MoveState extends State {
     execute(scene, player) {
-        const { left, right, up, down, space, shift } = scene.keys;
+        const { left, right, up, down, space, shift, c } = scene.keys;
 
         if (Phaser.Input.Keyboard.JustDown(space)) {
             this.stateMachine.transition('swing');
             return;
         }
 
-        if (Phaser.Input.Keyboard.JustDown(shift)) {
+        if (player.canDash && Phaser.Input.Keyboard.JustDown(shift)) {
             this.stateMachine.transition('dash');
+            return;
+        }
+
+        if (player.canUseShuriken && Phaser.Input.Keyboard.JustDown(c)) {
+            this.stateMachine.transition('shoot');
             return;
         }
 
@@ -176,5 +246,13 @@ class DashState extends State {
             player.clearTint();
             this.stateMachine.transition('idle');
         });
+    }
+}
+
+class ShootState extends State {
+    enter(scene, player) {
+        player.setVelocity(0);
+        player.shootShuriken();
+        this.stateMachine.transition('idle');
     }
 }

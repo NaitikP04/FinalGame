@@ -8,11 +8,11 @@
     ],
     "fileStates": {
         "dungeonMap.tmx": {
-            "scale": 0.0376,
+            "scale": 0.0602,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 7420.212765957445,
-                "y": 8803.191489361701
+                "x": 4368.770764119601,
+                "y": 4717.6079734219265
             }
         },
         "dungeonMap.tmx#DungeonTileset": {

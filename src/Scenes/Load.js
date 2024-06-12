@@ -50,12 +50,13 @@ class Load extends Phaser.Scene {
             frameWidth: 64,
             frameHeight: 64,
         });
-        // Load the tileset for enemies
-        // this.load.spritesheet('DungeonTileset', 'tilemap_packed.png', {
-        //     frameWidth: 32,
-        //     frameHeight: 32,
-        // });        
-        // this.load.tilemapTiledJSON("map", "dungeonMap..tmj"); // Load JSON of tilemap  
+
+        // Load shuriken spritesheet
+        this.load.spritesheet('shuriken', 'ShurikenSpritesheet.png', {
+            frameWidth: 25.6,
+            frameHeight: 32,
+        });
+
         this.load.image('map', 'map-scroll.jpg')
         this.load.image('bat', 'bat.png');
         this.load.image('batAttack1', 'batAttack1.png'); // Frame 1
@@ -151,6 +152,20 @@ class Load extends Phaser.Scene {
             ],
             frameRate: 8,
             repeat: -1
+        });
+
+        this.anims.create({
+            key: 'shurikenBasic',
+            frameRate: 8,
+            repeat: -1,
+            frames: this.anims.generateFrameNumbers('shuriken', { start: 5, end: 6 }),
+        });
+
+        this.anims.create({
+            key: 'shurikenUpgraded',
+            frameRate: 8,
+            repeat: -1,
+            frames: this.anims.generateFrameNumbers('shuriken', { start: 0, end: 3 }),
         });
 
         // Proceed once loading completes
