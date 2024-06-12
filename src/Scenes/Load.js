@@ -50,7 +50,11 @@ class Load extends Phaser.Scene {
             frameWidth: 64,
             frameHeight: 64,
         });
-        // this.load.image("DungeonTileset", "tilemap_packed.png"); // Tile sheet   
+        // Load the tileset for enemies
+        this.load.spritesheet('DungeonTileset', 'tilemap_packed.png', {
+            frameWidth: 32,
+            frameHeight: 32,
+        });        
         // this.load.tilemapTiledJSON("map", "dungeonMap..tmj"); // Load JSON of tilemap  
         this.load.image('map', 'map-scroll.jpg')
   
@@ -109,7 +113,7 @@ class Load extends Phaser.Scene {
         // Assassin attack animation 
         this.anims.create({
             key: 'assassinAttack',
-            frameRate: 30,
+            frameRate: 45,
             repeat: 0,
             frames: this.anims.generateFrameNumbers('assassinAttack', { start: 0, end: 18 }),
         });
@@ -130,7 +134,7 @@ class Load extends Phaser.Scene {
 
         this.anims.create({
             key: 'assassinStun',
-            frameRate: 8,
+            frameRate: 14.67,
             repeat: 0,
             frames: this.anims.generateFrameNumbers('assassinStun', { start: 0, end: 21 }),
         });
