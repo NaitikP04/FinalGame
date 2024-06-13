@@ -75,6 +75,17 @@ class Load extends Phaser.Scene {
         this.load.image('water-tiles', 'spr_ocean_water_animated_tiles.png');
 
         this.load.tilemapTiledJSON('dungeon_map', 'dungeon_map_tiles.tmj');
+
+        // Load tilemap_packed as a spritesheet
+        this.load.spritesheet('dungeon-map-tiles', 'tilemap_packed.png', {
+            frameWidth: 16,
+            frameHeight: 16,
+        });
+
+        this.load.spritesheet('water-object-sheet', 'water.png', {
+            frameWidth: 16,
+            frameHeight: 16,
+        });
   
     }
 

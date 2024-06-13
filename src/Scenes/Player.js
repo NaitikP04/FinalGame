@@ -5,33 +5,34 @@ class Player extends Phaser.Physics.Arcade.Sprite {
         scene.add.existing(this);
         scene.physics.add.existing(this);
 
-        this.body.setSize(this.width / 2, this.height/2);
+        this.body.setSize(this.width / 2, this.height / 2);
         this.body.setCollideWorldBounds(true);
 
         // Set custom player properties
         this.direction = 'right';
-        this.playerVelocity = 500; //original 100
+        this.playerVelocity = 500;
         this.dashCooldown = 300;
         this.hurtTimer = 500;
         this.facing = 'right';
-        this.health = 100; // Initialize health
+        this.health = 20;
+        this.maxHealth = 100;
         this.isHurt = false;
-        this.lives = 3; // Number of extra lives
+        this.lives = 1;
         this.isReviving = false;
 
-        this.canDash = true; // Locked by default
-        this.canUseShuriken = true; // Locked by default
+        this.canDash = true;
+        this.canUseShuriken = true;
         this.hasUpgradedShuriken = true;
 
-        this.basicShurikenCooldown = 4000;
-        this.upgradedShurikenCooldown = 2000;
+        this.basicShurikenCooldown = 100;
+        this.upgradedShurikenCooldown = 500;
         this.lastShurikenTime = 0;
 
         this.hitbox = scene.add.rectangle(x, y + 5, 30, 10, 0xff0000, 0);
         scene.physics.add.existing(this.hitbox);
         this.hitbox.body.enable = false;
 
-        // Initialize state machine managing player (initial state, possible states, state args[])
+        // Initialize state machine managing player
         this.stateMachine = new StateMachine('idle', {
             idle: new IdleState(),
             move: new MoveState(),
@@ -40,11 +41,16 @@ class Player extends Phaser.Physics.Arcade.Sprite {
             shoot: new ShootState(),
             revive: new ReviveState()
         }, [scene, this]);
+
+        // Initialize health bar
+        this.healthBar = scene.add.graphics();
+        this.updateHealthBar();
     }
 
     update(time, delta) {
         this.stateMachine.step();
-        this.resetHitbox(); // Reset hitbox position
+        this.resetHitbox();
+        this.updateHealthBar();
     }
 
     updateHitbox() {
@@ -59,11 +65,10 @@ class Player extends Phaser.Physics.Arcade.Sprite {
 
     resetHitbox() {
         this.hitbox.x = this.x;
-        this.hitbox.y = this.y + 5; // Adjust position as needed
+        this.hitbox.y = this.y + 5;
     }
 
     takeDamage(amount) {
-        console.log(`Taking damage: ${amount}`); // Log the amount of damage
         if (typeof amount !== 'number' || isNaN(amount)) {
             console.error(`Invalid damage amount: ${amount}`);
             return;
@@ -73,8 +78,6 @@ class Player extends Phaser.Physics.Arcade.Sprite {
             this.health -= amount;
             this.isHurt = true;
             this.setTint(0xff0000); // Flash red
-
-            console.log(`Player health after damage: ${this.health}`);
 
             if (this.health <= 0) {
                 if (this.lives > 0) {
@@ -89,6 +92,8 @@ class Player extends Phaser.Physics.Arcade.Sprite {
                     this.isHurt = false;
                 });
             }
+
+            this.updateHealthBar();
         }
     }
 
@@ -98,17 +103,20 @@ class Player extends Phaser.Physics.Arcade.Sprite {
         this.anims.play('revive');
         this.clearTint();
         this.scene.time.delayedCall(2000, () => { // Adjust the duration if needed
-            this.health = 100; // Reset health
+            this.health = this.maxHealth; // Reset health
             this.isReviving = false;
             this.isHurt = false;
             this.stateMachine.transition('idle');
+            this.updateHealthBar();
         });
     }
 
-    checkAttackCollision(target) {
-        if (this.hitbox.body.enable && Phaser.Geom.Intersects.RectangleToRectangle(this.hitbox.getBounds(), target.getBounds())) {
-            target.takeDamage(20); // Damage amount can be adjusted
-        }
+    updateHealthBar() {
+        this.healthBar.clear();
+        this.healthBar.fillStyle(0xff0000);
+        this.healthBar.fillRect(this.x - 15, this.y - 20, (30 * this.health) / this.maxHealth, 5);
+        this.healthBar.lineStyle(1, 0xffffff);
+        this.healthBar.strokeRect(this.x - 15, this.y - 20, 30, 5);
     }
 
     shootShuriken() {
@@ -163,6 +171,7 @@ class Player extends Phaser.Physics.Arcade.Sprite {
         this.hasUpgradedShuriken = true;
     }
 }
+
 
 // Player-specific state classes
 class IdleState extends State {

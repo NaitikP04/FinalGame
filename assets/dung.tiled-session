@@ -12,11 +12,11 @@
             "scaleInEditor": 1
         },
         "dungeon_map_tiles.tmx": {
-            "scale": 0.1482,
+            "scale": 1,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 1747.638326585695,
-                "y": 2422.402159244264
+                "x": 1052,
+                "y": 1537
             }
         },
         "dungeon_map_tiles.tmx#dungeon-map": {
