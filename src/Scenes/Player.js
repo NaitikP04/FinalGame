@@ -1,3 +1,4 @@
+
 class Player extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, x, y, texture, frame) {
         super(scene, x, y, texture, frame);
@@ -11,10 +12,12 @@ class Player extends Phaser.Physics.Arcade.Sprite {
         this.direction = 'right';
         this.playerVelocity = 100;
         this.dashCooldown = 300;
-        this.hurtTimer = 250;
+        this.hurtTimer = 500;
         this.facing = 'right';
-        this.health = 100;
+        this.health = 100; // Initialize health
         this.isHurt = false;
+        this.lives = 3; // Number of extra lives
+        this.isReviving = false;
 
         this.canDash = true; // Locked by default
         this.canUseShuriken = true; // Locked by default
@@ -35,6 +38,7 @@ class Player extends Phaser.Physics.Arcade.Sprite {
             swing: new SwingState(),
             dash: new DashState(),
             shoot: new ShootState(),
+            revive: new ReviveState()
         }, [scene, this]);
     }
 
@@ -59,16 +63,46 @@ class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     takeDamage(amount) {
-        if (!this.isHurt) {
+        console.log(`Taking damage: ${amount}`); // Log the amount of damage
+        if (typeof amount !== 'number' || isNaN(amount)) {
+            console.error(`Invalid damage amount: ${amount}`);
+            return;
+        }
+
+        if (!this.isHurt && !this.isReviving) {
             this.health -= amount;
             this.isHurt = true;
             this.setTint(0xff0000); // Flash red
 
-            this.scene.time.delayedCall(this.hurtTimer, () => {
-                this.clearTint();
-                this.isHurt = false;
-            });
+            console.log(`Player health after damage: ${this.health}`);
+
+            if (this.health <= 0) {
+                if (this.lives > 0) {
+                    this.lives -= 1;
+                    this.stateMachine.transition('revive');
+                } else {
+                    // Handle player death (e.g., game over logic)
+                }
+            } else {
+                this.scene.time.delayedCall(this.hurtTimer, () => {
+                    this.clearTint();
+                    this.isHurt = false;
+                });
+            }
         }
+    }
+
+    revive() {
+        this.isReviving = true;
+        this.isHurt = true;
+        this.anims.play('revive');
+        this.clearTint();
+        this.scene.time.delayedCall(2000, () => { // Adjust the duration if needed
+            this.health = 100; // Reset health
+            this.isReviving = false;
+            this.isHurt = false;
+            this.stateMachine.transition('idle');
+        });
     }
 
     checkAttackCollision(target) {
@@ -254,5 +288,11 @@ class ShootState extends State {
         player.setVelocity(0);
         player.shootShuriken();
         this.stateMachine.transition('idle');
+    }
+}
+
+class ReviveState extends State {
+    enter(scene, player) {
+        player.revive();
     }
 }

@@ -24,6 +24,10 @@ class Load extends Phaser.Scene {
             frameWidth: 64,
             frameHeight: 64,
         });
+        this.load.spritesheet('playerRevive', 'Player_Revive_Outlined.png', {
+            frameWidth: 64,
+            frameHeight: 64,
+        });
 
         //assassin boss assets
         this.load.spritesheet('assassinIdle', 'Assassin_Idle_Outlined.png', {
@@ -62,6 +66,7 @@ class Load extends Phaser.Scene {
         this.load.image('batAttack1', 'batAttack1.png'); // Frame 1
         this.load.image('batAttack2', 'batAttack2.png'); // Frame 2
         this.load.image('ghost', 'ghost.png');
+        this.load.image('spider', 'spider.png');
   
     }
 
@@ -97,6 +102,14 @@ class Load extends Phaser.Scene {
             repeat: 0,
             frames: this.anims.generateFrameNumbers('playerDash', { start: 0, end: 5 }),
         }); 
+
+        // Player revive animation
+        this.anims.create({
+            key: 'revive',
+            frameRate: 12,
+            repeat: 0,
+            frames: this.anims.generateFrameNumbers('playerRevive', { start: 0, end: 23 }),
+        });
 
         // Assassin Boss animations
         // Assassin idle animation

@@ -18,6 +18,7 @@ class Shuriken extends Phaser.Physics.Arcade.Sprite {
         // Add collision checks with all enemy groups
         scene.physics.add.collider(this, scene.bats, this.handleCollision, null, this);
         scene.physics.add.collider(this, scene.ghosts, this.handleCollision, null, this);
+        scene.physics.add.collider(this, scene.spiders, this.handleCollision, null, this);
         scene.physics.add.collider(this, scene.assassinBoss, this.handleCollision, null, this);
     }
 

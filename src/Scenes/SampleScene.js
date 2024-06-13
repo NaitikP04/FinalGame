@@ -14,12 +14,16 @@ class SampleScene extends Phaser.Scene {
 
         this.bats = this.physics.add.group();
         this.ghosts = this.physics.add.group();
+        this.spiders = this.physics.add.group();
 
         // Create bats
-        this.bats.add(new Bat(this, 500, 300));
+        // this.bats.add(new Bat(this, 500, 300));
         
         // Create ghosts
-        this.ghosts.add(new Ghost(this, 400, 300));
+        // this.ghosts.add(new Ghost(this, 400, 300));
+
+        // Create spiders
+        // this.spiders.add(new Spider(this, 600, 200));
         
         // Set up keyboard input
         this.keys = this.input.keyboard.createCursorKeys();
@@ -38,11 +42,12 @@ class SampleScene extends Phaser.Scene {
         this.physics.add.collider(this.player, this.bats, this.handlePlayerEnemyCollision, null, this);
         this.physics.add.collider(this.player.hitbox, this.bats, this.handleBatHitCollision, null, this);
         this.physics.add.collider(this.player.hitbox, this.ghosts, this.handleGhostHitCollision, null);
+        this.physics.add.collider(this.player.hitbox, this.spiders, this.handleSpiderHitCollision, null, this);
 
     }
 
-    handlePlayerBossCollision(player, boss) {
-        player.takeDamage(boss.attackPower);
+    handlePlayerBossCollision(player) {
+        player.takeDamage(this.assassinBoss.attackPower);
     }
 
     handleBossAttackCollision() {
@@ -59,6 +64,10 @@ class SampleScene extends Phaser.Scene {
 
     handleGhostHitCollision(hitbox, ghost) {
         ghost.takeDamage(20);
+    }
+
+    handleSpiderHitCollision(hitbox, spider) {
+        spider.takeDamage(20);
     }
 
     handleShurikenHitEnemy(shuriken, enemy) {
@@ -84,6 +93,11 @@ class SampleScene extends Phaser.Scene {
         Phaser.Actions.Call(this.ghosts.getChildren(), ghost => {
             ghost.update(time, delta);
             ghost.stateMachine.step();
+        });
+
+        Phaser.Actions.Call(this.spiders.getChildren(), spider => {
+            spider.update(time, delta);
+            spider.stateMachine.step();
         });
     }
 }
