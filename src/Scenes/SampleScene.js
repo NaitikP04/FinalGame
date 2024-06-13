@@ -5,34 +5,52 @@ class SampleScene extends Phaser.Scene {
     }
 
     create() {
-        // Add map
-        this.map = this.add.image(0, 0, 'map').setOrigin(0);
+        // Load the tilemap
+        this.map = this.add.tilemap('dungeon_map', 16, 16);
+
+        // Add the tilesets to the map
+        this.dungeonMapTiles = this.map.addTilesetImage('dungeon-map', 'dungeon-tiles');
+        this.grassTiles = this.map.addTilesetImage('spr_grass_tileset', 'spr_grass_tileset');
+        this.waterTiles = this.map.addTilesetImage('water', 'water');
+        this.animatedWaterTiles = this.map.addTilesetImage('water-tiles', 'water-tiles');
+
+        // Create the layers
+        this.groundLayer = this.map.createLayer('Ground', [this.dungeonMapTiles, this.grassTiles, this.waterTiles, this.animatedWaterTiles], 0, 0);
+        this.staticObjectLayer = this.map.createLayer('StaticObjects', [this.dungeonMapTiles, this.grassTiles, this.waterTiles, this.animatedWaterTiles], 0, 0);
+        this.layeringLayer = this.map.createLayer('layering', [this.dungeonMapTiles, this.grassTiles, this.waterTiles, this.animatedWaterTiles], 0, 0);
+        this.bridgeWaterLayer = this.map.createLayer('BridgeWaterLayer', [this.dungeonMapTiles, this.grassTiles, this.waterTiles, this.animatedWaterTiles], 0, 0);
+        this.bridgeLayer = this.map.createLayer('BridgeLayer', [this.dungeonMapTiles, this.grassTiles, this.waterTiles, this.animatedWaterTiles], 0, 0);
+
+
+        // Set up collision by property
+        this.groundLayer.setCollisionByProperty({ collides: true });
+        this.staticObjectLayer.setCollisionByProperty({ collides: true });
+        this.layeringLayer.setCollisionByProperty({ collides: true });
+
 
         // Create player and boss
-        this.player = new Player(this, 200, 150, 'playerIdle', 0);
+        this.player = new Player(this, 550, 1532, 'playerIdle', 0);
         this.assassinBoss = new AssassinBoss(this, 400, 150, 'assassinIdle', 0);
+
+        //add colliders for the player and every layer
+        this.physics.add.collider(this.player, this.groundLayer);
+        this.physics.add.collider(this.player, this.staticObjectLayer);
+        this.physics.add.collider(this.player, this.layeringLayer);
 
         this.bats = this.physics.add.group();
         this.ghosts = this.physics.add.group();
         this.spiders = this.physics.add.group();
 
-        // Create bats
-        // this.bats.add(new Bat(this, 500, 300));
-        
-        // Create ghosts
-        // this.ghosts.add(new Ghost(this, 400, 300));
-
-        // Create spiders
-        // this.spiders.add(new Spider(this, 600, 200));
-        
         // Set up keyboard input
         this.keys = this.input.keyboard.createCursorKeys();
         this.keys.c = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.C);
+        this.keys.p = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.P);
+
 
         // Set up camera
-        this.cameras.main.setBounds(0, 0, this.map.width, this.map.height);
+        this.cameras.main.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
         this.cameras.main.startFollow(this.player, false, 0.5, 0.5);
-        this.physics.world.setBounds(0, 0, this.map.width, this.map.height);
+        this.physics.world.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
 
         this.physics.world.setBoundsCollision(true, true, true, true);
 
@@ -43,7 +61,6 @@ class SampleScene extends Phaser.Scene {
         this.physics.add.collider(this.player.hitbox, this.bats, this.handleBatHitCollision, null, this);
         this.physics.add.collider(this.player.hitbox, this.ghosts, this.handleGhostHitCollision, null);
         this.physics.add.collider(this.player.hitbox, this.spiders, this.handleSpiderHitCollision, null, this);
-
     }
 
     handlePlayerBossCollision(player) {
@@ -83,6 +100,10 @@ class SampleScene extends Phaser.Scene {
         this.player.stateMachine.step();
         this.assassinBoss.update(time, delta);
         this.assassinBoss.stateMachine.step();
+
+        if (Phaser.Input.Keyboard.JustDown(this.keys.p)) {
+            console.log(`Player position: x=${this.player.x}, y=${this.player.y}`);
+        }
 
         // Update and step state machine for each bat
         Phaser.Actions.Call(this.bats.getChildren(), bat => {

@@ -67,6 +67,14 @@ class Load extends Phaser.Scene {
         this.load.image('batAttack2', 'batAttack2.png'); // Frame 2
         this.load.image('ghost', 'ghost.png');
         this.load.image('spider', 'spider.png');
+
+        //Load tilemap and tilesets
+        this.load.image('dungeon-tiles', 'tilemap_packed.png');
+        this.load.image('spr_grass_tileset', 'spr_grass_tileset.png');
+        this.load.image('water', 'water.png');
+        this.load.image('water-tiles', 'spr_ocean_water_animated_tiles.png');
+
+        this.load.tilemapTiledJSON('dungeon_map', 'dungeon_map_tiles.tmj');
   
     }
 
