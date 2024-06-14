@@ -99,7 +99,7 @@ class Player extends Phaser.Physics.Arcade.Sprite {
                     }
                     if (this.scene.isBackgroundMusicPlaying) {
                         this.scene.backgroundMusic.stop();
-                        this.scene.isBackgroundMusicPlaying = false;
+                        this.scene.isBossMusicPlaying = false;
                     }
                     this.scene.time.delayedCall(3200, () => { // 3 seconds delay for death animation
                         this.scene.scene.start('GameOverScene'); // Transition to game over scene

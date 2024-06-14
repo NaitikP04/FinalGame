@@ -46,8 +46,6 @@ class SampleScene extends Phaser.Scene {
         };
         this.isSpawning = false;
         this.assassinBoss = null; // Initialize to null
-        this.isBackgroundMusicPlaying = false; 
-        this.isBossMusicPlaying = false;
     }
 
     create() {
@@ -206,11 +204,14 @@ class SampleScene extends Phaser.Scene {
         //skip mode 
         // Add the "U" key for skip mode
         this.keys.u = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.U);
-
+        
         // Add a listener for the "U" key
         this.keys.u.on('down', () => {
             this.activateSkipMode();
         });
+
+        this.isBackgroundMusicPlaying = false; 
+        this.isBossMusicPlaying = false;
 
         if (this.isBossMusicPlaying){
             this.sound.stopByKey('bossMusic');
