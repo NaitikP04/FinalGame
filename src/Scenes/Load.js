@@ -99,9 +99,9 @@ class Load extends Phaser.Scene {
 
         // Load sound assets
         this.load.path = './assets/sound/';
-        this.load.audio('backgroundMusic', 'backgroundMusic.mp3'); ///
+        this.load.audio('backgroundMusic', 'backgroundMusic.mp3'); 
         this.load.audio('bossHit', 'bossHit.mp3');
-        this.load.audio('bossMusic', 'bossMusicLoop.wav'); ///
+        this.load.audio('bossMusic', 'bossMusicLoop.wav'); 
         this.load.audio('bossSpawn', 'bossSpawn.mp3');
         this.load.audio('dash', 'dash.wav');
         this.load.audio('hitMarker', 'hitMarker.mp3'); 
@@ -110,8 +110,8 @@ class Load extends Phaser.Scene {
         this.load.audio('shurikenBasic', 'shurikenBasic.mp3');
         this.load.audio('shurikenUpgraded', 'shurikenUpgraded.mp3');
         this.load.audio('bossStun', 'bossStun.mp3'); 
-        this.load.audio('winScreen', 'winScreen.mp3'); ///
-        this.load.audio('gameOver', 'gameOver.mp3'); ///
+        this.load.audio('winScreen', 'WinScreen.mp3'); 
+        this.load.audio('gameOver', 'gameOver.mp3'); 
     }
 
     create() {
