@@ -428,7 +428,7 @@ class SampleScene extends Phaser.Scene {
     update(time, delta) {
         this.player.update(time, delta);
         this.player.stateMachine.step();
-        if (this.assassinBoss) {
+        if (this.assassinBoss  &&  this.assassinBoss.hp > 0) {
             this.assassinBoss.update(time, delta);
             this.assassinBoss.stateMachine.step();
         }
