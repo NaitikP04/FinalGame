@@ -7,7 +7,7 @@ class Ghost extends Phaser.Physics.Arcade.Sprite {
         this.body.setSize(this.width / 2, this.height / 2);
         this.body.setCollideWorldBounds(true);
 
-        this.hp = 15; // Adjust as needed
+        this.hp = 15; 
 
         this.debuffDuration = 2000; // Duration of the speed debuff in ms
         this.debuffSpeed = 50; // Speed of the player when debuffed
@@ -44,7 +44,6 @@ class Ghost extends Phaser.Physics.Arcade.Sprite {
     }
 
     update(time, delta) {
-        // Update logic handled in SampleScene update method
     }
 }
 
@@ -69,7 +68,6 @@ class GhostIdleState extends State {
 
 class GhostChaseState extends State {
     enter(scene, ghost) {
-        // ghost.anims.play('ghostIdle', true); // Assuming you have a flying animation
     }
 
     execute(scene, ghost) {
@@ -95,7 +93,7 @@ class GhostAttackState extends State {
     enter(scene, ghost) {
         const player = scene.player;
         ghost.debuffPlayer(player);
-        player.takeDamage(10); // Adjust damage as needed
+        player.takeDamage(10); 
         ghost.destroy();
     }
 }

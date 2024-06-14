@@ -1,20 +1,20 @@
 class Spider extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, x, y) {
-        super(scene, x, y, 'spider'); // Use 'spider' texture
+        super(scene, x, y, 'spider'); 
         scene.add.existing(this);
         scene.physics.add.existing(this);
 
         this.body.setSize(this.width / 2, this.height / 2);
         this.body.setCollideWorldBounds(true);
 
-        this.hp = 40; // Adjust as needed
+        this.hp = 30; 
 
         this.chaseSpeed = 60; // Speed of the spider when chasing the player
         this.chargeSpeed = 250; // Speed of the spider when charging at the player
         this.chaseRange = 300; // Range at which the spider will chase the player
         this.chargeRange = 100; // Range at which the spider will charge at the player
 
-        this.returnPosition = { x, y }; // Store the starting position
+        this.returnPosition = { x, y }; 
         this.isCharging = false;
 
         // Initialize state machine
@@ -35,7 +35,6 @@ class Spider extends Phaser.Physics.Arcade.Sprite {
     }
 
     update(time, delta) {
-        // Update logic handled in SampleScene update method
     }
 }
 
@@ -73,7 +72,7 @@ class SpiderChaseState extends State {
         }
 
         if (distance < spider.chargeRange && !spider.isCharging) {
-            spider.returnPosition = { x: spider.x, y: spider.y }; // Update the return position
+            spider.returnPosition = { x: spider.x, y: spider.y }; 
             this.stateMachine.transition('charge');
         } else if (distance > spider.chaseRange) {
             this.stateMachine.transition('idle');
@@ -93,7 +92,7 @@ class SpiderChargeState extends State {
         const distance = Phaser.Math.Distance.Between(spider.x, spider.y, player.x, player.y);
 
         if (distance < 5) { // Check if spider is close enough to the player to deal damage
-            player.takeDamage(10); // Adjust damage as needed
+            player.takeDamage(10); // 
             this.stateMachine.transition('return');
         }
         else if (distance > spider.chargeRange) {

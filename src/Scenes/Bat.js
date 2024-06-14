@@ -13,7 +13,6 @@ class Bat extends Phaser.Physics.Arcade.Sprite {
         this.projectileSpeed = 200; // Speed of the projectiles
         this.chaseSpeed = 80; // Speed of the bat when chasing the player
         this.attackRange = 250; // Range at which the bat will attack the player
-
         this.lastShotTime = 0; // Initialize the last shot time
 
         // Initialize state machine
@@ -67,16 +66,15 @@ class Bat extends Phaser.Physics.Arcade.Sprite {
     startFloating() {
         this.scene.tweens.add({
             targets: this,
-            y: this.y - 15, // Adjust the value as needed for the floating effect
+            y: this.y - 15, 
             yoyo: true,
             repeat: -1,
             ease: 'Sine.easeInOut',
-            duration: 500 // Adjust the value for speed of floating
+            duration: 500 
         });
     }
 
     update(time, delta) {
-        // Update logic handled in SampleScene update method
     }
 }
 
@@ -100,7 +98,7 @@ class BatIdleState extends State {
 
 class BatChaseState extends State {
     enter(scene, bat) {
-        // bat.anims.play('batIdle', true); // Assuming you have a flying animation
+
     }
 
     execute(scene, bat) {
@@ -118,7 +116,7 @@ class BatAttackState extends State {
         const currentTime = scene.time.now;
         if (currentTime - bat.lastShotTime > bat.attackCooldown) {
             bat.shootProjectile();
-            bat.lastShotTime = currentTime; // Update last shot time
+            bat.lastShotTime = currentTime;
         }
         this.stateMachine.transition('chase');
     }

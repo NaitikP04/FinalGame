@@ -166,14 +166,7 @@ class SampleScene extends Phaser.Scene {
         this.physics.add.overlap(this.player, this.hpPotionGroup, (obj1, obj2) => {
             obj2.destroy();
             this.sound.play('hpPickup');
-            //increase hp by 20, if player if below 80, increase by 10 if player is 90, do nothing is player is full hp
-            if (this.player.health <= 70) {
-                this.player.health += 30;
-            } else if (this.player.health <= 80) {
-                this.player.health += 20;
-            } else if (this.player.health <= 90) {
-                this.player.health += 10;
-            }
+            this.player.health = Math.min(this.player.health + 50, this.player.maxHealth);
         });
         this.physics.add.overlap(this.player, this.basicShurikens, (obj1, obj2) => {
             obj2.destroy();
@@ -202,10 +195,8 @@ class SampleScene extends Phaser.Scene {
         this.spawnDelay = 5000; // Delay between waves in milliseconds
 
         //skip mode 
-        // Add the "U" key for skip mode
         this.keys.u = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.U);
         
-        // Add a listener for the "U" key
         this.keys.u.on('down', () => {
             this.activateSkipMode();
         });
@@ -237,7 +228,7 @@ class SampleScene extends Phaser.Scene {
 
     handleBatHitCollision(hitbox, bat) {
         if (bat.takeDamage) {
-            bat.takeDamage(20);  // Adjust damage as needed
+            bat.takeDamage(20);  
         } else {
             console.warn("Bat does not have takeDamage method");
         }
@@ -245,7 +236,7 @@ class SampleScene extends Phaser.Scene {
     
     handleSpiderHitCollision(hitbox, spider) {
         if (spider.takeDamage) {
-            spider.takeDamage(20);  // Adjust damage as needed
+            spider.takeDamage(20);  
         } else {
             console.warn("Spider does not have takeDamage method");
         }
@@ -253,7 +244,7 @@ class SampleScene extends Phaser.Scene {
 
     handleGhostHitCollision(hitbox, ghost) {
         if (ghost.takeDamage) {
-            ghost.takeDamage(20);  // Adjust damage as needed
+            ghost.takeDamage(20);  
         } else {
             console.warn("Ghost does not have takeDamage method");
         }
@@ -261,7 +252,7 @@ class SampleScene extends Phaser.Scene {
 
     handlePlayerBossCollision(player, boss) {
         if (player.takeDamage) {
-            player.takeDamage(10);  // Adjust damage as needed
+            player.takeDamage(10);  
         } else {
             console.warn("Player does not have takeDamage method");
         }
@@ -269,7 +260,7 @@ class SampleScene extends Phaser.Scene {
 
     handleBossAttackCollision(hitbox, boss) {
         if (boss.takeDamage) {
-            boss.takeDamage(10);  // Adjust damage as needed
+            boss.takeDamage(10);  
         } else {
             console.warn("Boss does not have takeDamage method");
         }
@@ -438,7 +429,6 @@ class SampleScene extends Phaser.Scene {
             console.log(`Player position: x=${this.player.x}, y=${this.player.y}`);
         }
 
-        // Update and step state machine for each bat
         Phaser.Actions.Call(this.bats.getChildren(), bat => {
             bat.update(time, delta);
             bat.stateMachine.step();
@@ -476,7 +466,6 @@ class SampleScene extends Phaser.Scene {
             this.physics.add.collider(this.player.hitbox, this.assassinBoss, this.handleBossAttackCollision, null, this);
             this.physics.add.collider(this.player.hitbox, this.assassinBoss.attackHitbox, this.handleBossAttackCollision, null, this);
             console.log("Assassin Boss spawned");
-            // delayed call to start playing boss music after boss spawns
             this.time.delayedCall(11500, () => {
                 this.sound.play('bossMusic', { volume: 0.6, loop: true });
                 this.isBossMusicPlaying = true;

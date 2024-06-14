@@ -11,7 +11,7 @@ class Player extends Phaser.Physics.Arcade.Sprite {
         // Set custom player properties
         this.direction = 'right';
         this.playerVelocity = 150;
-        this.dashCooldown = 2000;  // Updated to a more reasonable cooldown
+        this.dashCooldown = 2000;  
         this.hurtTimer = 500;
         this.facing = 'right';
         this.health = 200;
@@ -24,10 +24,10 @@ class Player extends Phaser.Physics.Arcade.Sprite {
         this.canUseShuriken = false;
         this.hasUpgradedShuriken = false;
 
-        this.basicShurikenCooldown = 3000; // Updated to a more reasonable cooldown
-        this.upgradedShurikenCooldown = 2000; // Updated to a more reasonable cooldown
+        this.basicShurikenCooldown = 3000; 
+        this.upgradedShurikenCooldown = 2000; 
         this.lastShurikenTime = 0;
-        this.lastDashTime = 0;  // Added for dash cooldown tracking
+        this.lastDashTime = 0;  
 
         this.hitbox = scene.add.rectangle(x, y + 5, 30, 10, 0xff0000, 0);
         scene.physics.add.existing(this.hitbox);

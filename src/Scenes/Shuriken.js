@@ -38,7 +38,6 @@ class Shuriken extends Phaser.Physics.Arcade.Sprite {
         if (shuriken.piercing <= 0) {
             shuriken.destroy();
         } else {
-            // Calculate the normalized direction vector
             const direction = new Phaser.Math.Vector2(shuriken.body.velocity.x, shuriken.body.velocity.y).normalize();
             // Reset the velocity to maintain the speed of 300
             shuriken.setVelocity(direction.x * 300, direction.y * 300);
@@ -46,6 +45,5 @@ class Shuriken extends Phaser.Physics.Arcade.Sprite {
     }
 
     update() {
-        // Additional update logic if needed
     }
 }

@@ -40,7 +40,7 @@ class UI extends Phaser.GameObjects.Container {
             this.shurikenCooldownText.setText('');
         }
 
-        this.shurikenIcon.setFrame(isUpgraded ? 0 : 5); // Set the correct frame for the shuriken icon
+        this.shurikenIcon.setFrame(isUpgraded ? 0 : 5); 
     }
 
     updateDashCooldown(cooldown, currentTime, lastDashTime) {
