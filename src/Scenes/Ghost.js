@@ -26,6 +26,7 @@ class Ghost extends Phaser.Physics.Arcade.Sprite {
 
     takeDamage(amount) {
         this.hp -= amount;
+        this.scene.sound.play('hitMarker');
         if (this.hp <= 0) {
             this.destroy();
         }
@@ -33,7 +34,7 @@ class Ghost extends Phaser.Physics.Arcade.Sprite {
 
     debuffPlayer(player) {
         console.log('Player debuffed!');
-        const originalSpeed = 100;
+        const originalSpeed = 150;
         player.playerVelocity = this.debuffSpeed;
 
         this.scene.time.delayedCall(this.debuffDuration, () => {

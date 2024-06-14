@@ -28,6 +28,10 @@ class Load extends Phaser.Scene {
             frameWidth: 64,
             frameHeight: 64,
         });
+        this.load.spritesheet('playerDeath', 'Player_Death_Outlined.png', {
+            frameWidth: 64,
+            frameHeight: 64,
+        });
 
         //assassin boss assets
         this.load.spritesheet('assassinIdle', 'Assassin_Idle_Outlined.png', {
@@ -61,12 +65,18 @@ class Load extends Phaser.Scene {
             frameHeight: 32,
         });
 
-        this.load.image('map', 'map-scroll.jpg')
+        this.load.image('map', 'map-scroll.jpg');
         this.load.image('bat', 'bat.png');
         this.load.image('batAttack1', 'batAttack1.png'); // Frame 1
         this.load.image('batAttack2', 'batAttack2.png'); // Frame 2
         this.load.image('ghost', 'ghost.png');
         this.load.image('spider', 'spider.png');
+
+        this.load.image('dash', 'dash.png');
+
+        this.load.image('gameOver', 'GameOver.png');
+        this.load.image('gameStart', 'gameStart.png');
+        this.load.image('gameWin', 'gameWin.png');
 
         //Load tilemap and tilesets
         this.load.image('dungeon-tiles', 'tilemap_packed.png');
@@ -86,7 +96,22 @@ class Load extends Phaser.Scene {
             frameWidth: 16,
             frameHeight: 16,
         });
-  
+
+        // Load sound assets
+        this.load.path = './assets/sound/';
+        this.load.audio('backgroundMusic', 'backgroundMusic.mp3'); ///
+        this.load.audio('bossHit', 'bossHit.mp3');
+        this.load.audio('bossMusic', 'bossMusicLoop.wav'); ///
+        this.load.audio('bossSpawn', 'bossSpawn.mp3');
+        this.load.audio('dash', 'dash.wav');
+        this.load.audio('hitMarker', 'hitMarker.mp3'); 
+        this.load.audio('hpPickup', 'hpPickup.mp3');
+        this.load.audio('revive', 'Revive.mp3');
+        this.load.audio('shurikenBasic', 'shurikenBasic.mp3');
+        this.load.audio('shurikenUpgraded', 'shurikenUpgraded.mp3');
+        this.load.audio('bossStun', 'bossStun.mp3'); 
+        this.load.audio('winScreen', 'winScreen.mp3'); ///
+        this.load.audio('gameOver', 'gameOver.mp3'); ///
     }
 
     create() {
@@ -130,6 +155,14 @@ class Load extends Phaser.Scene {
             frames: this.anims.generateFrameNumbers('playerRevive', { start: 0, end: 23 }),
         });
 
+        // Player death animation
+        this.anims.create({
+            key: 'death',
+            frameRate: 6,
+            repeat: 0,
+            frames: this.anims.generateFrameNumbers('playerDeath', { start: 0, end: 18 }),
+        });
+
         // Assassin Boss animations
         // Assassin idle animation
         this.anims.create({
@@ -164,7 +197,7 @@ class Load extends Phaser.Scene {
 
         this.anims.create({
             key: 'assassinDeath',
-            frameRate: 8,
+            frameRate: 6,
             repeat: 0,
             frames: this.anims.generateFrameNumbers('assassinDeath', { start: 0, end: 18 }),
         });
@@ -201,6 +234,6 @@ class Load extends Phaser.Scene {
         });
 
         // Proceed once loading completes
-        this.scene.start('sampleScene');
+        this.scene.start('GameStartScene');
     }
 }

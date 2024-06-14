@@ -9,9 +9,9 @@ class Bat extends Phaser.Physics.Arcade.Sprite {
 
         this.hp = 10; // Adjust as needed
 
-        this.attackCooldown = 2000; // Time between attacks in ms
+        this.attackCooldown = 3500; // Time between attacks in ms
         this.projectileSpeed = 200; // Speed of the projectiles
-        this.chaseSpeed = 70; // Speed of the bat when chasing the player
+        this.chaseSpeed = 80; // Speed of the bat when chasing the player
         this.attackRange = 250; // Range at which the bat will attack the player
 
         this.lastShotTime = 0; // Initialize the last shot time
@@ -39,6 +39,7 @@ class Bat extends Phaser.Physics.Arcade.Sprite {
 
     takeDamage(amount) {
         this.hp -= amount;
+        this.scene.sound.play('hitMarker');
         if (this.hp <= 0) {
             this.destroy();
         }

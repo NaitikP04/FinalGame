@@ -4,13 +4,13 @@ class AssassinBoss extends Phaser.Physics.Arcade.Sprite {
         scene.add.existing(this);
         scene.physics.add.existing(this);
         
-        this.health = 100;
-        this.attackPower = 10;
+        this.hp = 450; //45 
+        this.attackPower = 60;
         this.isStunned = false;
         this.hurtTimer = 250; // in ms
         this.stunDuration = 1500; // in ms
         this.attackRange = 40;
-        this.followSpeed = 85;
+        this.followSpeed = 150;
         this.stunCooldown = 15000; // Cooldown period for stun
         this.canBeStunned = true; // Flag to check if the boss can be stunned
         this.isHurt = false;
@@ -41,10 +41,11 @@ class AssassinBoss extends Phaser.Physics.Arcade.Sprite {
 
     takeDamage(amount) {
         if (!this.isHurt) {
-            this.health -= amount;
+            this.hp -= amount;
+            this.scene.sound.play("bossHit");
             this.isHurt = true;
             this.setTint(0xff0000); // Flash red
-            if (this.health <= 0) {
+            if (this.hp <= 0) {
                 this.stateMachine.transition('death');
             }
             this.scene.time.delayedCall(this.hurtTimer, () => {
@@ -54,6 +55,7 @@ class AssassinBoss extends Phaser.Physics.Arcade.Sprite {
 
             if (!this.isStunned && this.canBeStunned) {
                 this.stateMachine.transition('stun');
+                this.scene.sound.play("bossStun");
                 this.canBeStunned = false;
                 this.clearTint();
                 this.scene.time.delayedCall(this.stunCooldown, () => {
@@ -84,7 +86,7 @@ class BossIdleState extends State {
 
 class BossChaseState extends State {
     execute(scene, boss) {
-        if (boss.health <= 0) {
+        if (boss.hp <= 0) {
             this.stateMachine.transition('death');
         }
         const player = scene.player;
@@ -135,7 +137,12 @@ class BossDeathState extends State {
         boss.setVelocity(0);
         boss.anims.play('assassinDeath');
         boss.once('animationcomplete', () => {
+            scene.sound.stopByKey('bossMusic');
+            scene.backgroundMusic.stop();
+            scene.isBackgroundMusicPlaying = false;
+            scene.isBossMusicPlaying = false;
             boss.destroy();
+            scene.scene.start('GameWinScene');
         });
     }
 }

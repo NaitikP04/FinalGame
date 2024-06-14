@@ -10,7 +10,7 @@ class Spider extends Phaser.Physics.Arcade.Sprite {
         this.hp = 40; // Adjust as needed
 
         this.chaseSpeed = 60; // Speed of the spider when chasing the player
-        this.chargeSpeed = 200; // Speed of the spider when charging at the player
+        this.chargeSpeed = 250; // Speed of the spider when charging at the player
         this.chaseRange = 300; // Range at which the spider will chase the player
         this.chargeRange = 100; // Range at which the spider will charge at the player
 
@@ -28,6 +28,7 @@ class Spider extends Phaser.Physics.Arcade.Sprite {
 
     takeDamage(amount) {
         this.hp -= amount;
+        this.scene.sound.play('hitMarker');
         if (this.hp <= 0) {
             this.destroy();
         }

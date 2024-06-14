@@ -16,35 +16,38 @@ class SampleScene extends Phaser.Scene {
         };
         this.waveConfigurations = {
             ghost: [
-                { ghosts: 1, bats: 0, spiders: 0 },
-                { ghosts: 2, bats: 0, spiders: 0 },
                 { ghosts: 3, bats: 0, spiders: 0 },
-                { ghosts: 4, bats: 0, spiders: 0 },
-                { ghosts: 5, bats: 0, spiders: 0 }
+                { ghosts: 5, bats: 2, spiders: 0 },
+                { ghosts: 5, bats: 3, spiders: 0 },
+                { ghosts: 6, bats: 1, spiders: 0 },
+                { ghosts: 5, bats: 2, spiders: 1 }
             ],
             bat: [
-                { ghosts: 0, bats: 1, spiders: 0 },
                 { ghosts: 0, bats: 2, spiders: 0 },
-                { ghosts: 0, bats: 3, spiders: 0 },
-                { ghosts: 0, bats: 3, spiders: 1 },
-                { ghosts: 0, bats: 3, spiders: 1 }
+                { ghosts: 0, bats: 4, spiders: 0 },
+                { ghosts: 0, bats: 4, spiders: 1 },
+                { ghosts: 0, bats: 5, spiders: 1 },
+                { ghosts: 0, bats: 5, spiders: 2 }
             ],
             spider: [
-                { ghosts: 0, bats: 0, spiders: 1 },
-                { ghosts: 0, bats: 0, spiders: 1 },
-                { ghosts: 0, bats: 0, spiders: 1 },
-                { ghosts: 0, bats: 0, spiders: 1 },
-                { ghosts: 0, bats: 0, spiders: 1 }
+                { ghosts: 0, bats: 0, spiders: 3 },
+                { ghosts: 0, bats: 1, spiders: 3 },
+                { ghosts: 0, bats: 0, spiders: 5 },
+                { ghosts: 0, bats: 2, spiders: 4 },
+                { ghosts: 0, bats: 2, spiders: 3 }
             ],
             mixed: [
-                { ghosts: 0, bats: 0, spiders: 0 },
-                { ghosts: 1, bats: 0, spiders: 1 },
                 { ghosts: 1, bats: 1, spiders: 1 },
-                { ghosts: 2, bats: 1, spiders: 1 },
-                { ghosts: 2, bats: 1, spiders: 2 }
+                { ghosts: 1, bats: 2, spiders: 1 },
+                { ghosts: 0, bats: 1, spiders: 1 },
+                { ghosts: 2, bats: 1, spiders: 3 },
+                { ghosts: 2, bats: 2, spiders: 3 }
             ]
         };
         this.isSpawning = false;
+        this.assassinBoss = null; // Initialize to null
+        this.isBackgroundMusicPlaying = false; 
+        this.isBossMusicPlaying = false;
     }
 
     create() {
@@ -120,8 +123,8 @@ class SampleScene extends Phaser.Scene {
         this.physics.world.enable(this.dash, Phaser.Physics.Arcade.STATIC_BODY)
 
         // Create player and boss
-        this.player = new Player(this, 666, 1603, 'playerIdle', 0);
-        this.assassinBoss = new AssassinBoss(this, 400, 150, 'assassinIdle', 0);
+        this.player = new Player(this, 666, 1603, 'playerIdle', 0); // 5735 3761 near boss
+        // this.assassinBoss = new AssassinBoss(this, 400, 150, 'assassinIdle', 0);
 
         //add colliders for the player and every layer
         this.physics.add.collider(this.player, this.groundLayer);
@@ -151,8 +154,6 @@ class SampleScene extends Phaser.Scene {
         this.physics.world.setBoundsCollision(true, true, true, true);
 
         // Set up collision between player and boss
-        this.physics.add.collider(this.player, this.assassinBoss.attackHitbox, this.handlePlayerBossCollision, null, this);
-        this.physics.add.collider(this.player.hitbox, this.assassinBoss, this.handleBossAttackCollision, null, this);
         this.physics.add.collider(this.player, this.bats, this.handlePlayerEnemyCollision, null, this);
         this.physics.add.collider(this.player.hitbox, this.bats, this.handleBatHitCollision, null, this);
         this.physics.add.collider(this.player.hitbox, this.ghosts, this.handleGhostHitCollision, null);
@@ -161,10 +162,12 @@ class SampleScene extends Phaser.Scene {
         //Object collision handling
         this.physics.add.overlap(this.player, this.reviveGroup, (obj1, obj2) => {
             obj2.destroy();
-            this.player.lives += 1;
+            this.sound.play('revive');
+            this.player.lives ++;
         });
         this.physics.add.overlap(this.player, this.hpPotionGroup, (obj1, obj2) => {
             obj2.destroy();
+            this.sound.play('hpPickup');
             //increase hp by 20, if player if below 80, increase by 10 if player is 90, do nothing is player is full hp
             if (this.player.health <= 70) {
                 this.player.health += 30;
@@ -176,17 +179,18 @@ class SampleScene extends Phaser.Scene {
         });
         this.physics.add.overlap(this.player, this.basicShurikens, (obj1, obj2) => {
             obj2.destroy();
-            this.player.canUseShuriken = true;
-            this.player.hasUpgradedShuriken = false;
+            this.player.unlockShuriken();
+            this.sound.play('shurikenBasic');
         });
         this.physics.add.overlap(this.player, this.upgradedShurikens, (obj1, obj2) => {
             obj2.destroy();
-            this.player.canUseShuriken = true;
-            this.player.hasUpgradedShuriken = true;
+            this.player.upgradeShuriken();
+            this.sound.play('shurikenUpgraded');
         });
         this.physics.add.overlap(this.player, this.dash, (obj1, obj2) => {
             obj2.destroy();
-            this.player.canDash = true;
+            this.player.unlockDash();
+            this.sound.play('dash');
         });
 
         this.inGhostLayer = false;
@@ -198,6 +202,36 @@ class SampleScene extends Phaser.Scene {
         this.timeSinceLastSpawn = 0;
         this.timeSinceLastSpawn = 0;
         this.spawnDelay = 5000; // Delay between waves in milliseconds
+
+        //skip mode 
+        // Add the "U" key for skip mode
+        this.keys.u = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.U);
+
+        // Add a listener for the "U" key
+        this.keys.u.on('down', () => {
+            this.activateSkipMode();
+        });
+
+        if (this.isBossMusicPlaying){
+            this.sound.stopByKey('bossMusic');
+            this.isBossMusicPlaying = false;
+        }
+        // Play background music
+        if (!this.isBackgroundMusicPlaying) {
+            this.backgroundMusic = this.sound.add('backgroundMusic', { volume: 0.5, loop: true });
+            this.backgroundMusic.play();
+            this.isBackgroundMusicPlaying = true;
+        }
+    }
+
+    activateSkipMode() {
+        this.player.lives++;
+        this.player.health = this.player.maxHealth;
+        this.player.unlockDash();
+        this.player.unlockShuriken();
+        this.player.upgradeShuriken();
+        this.player.x = 5720; // Teleport player near the boss
+        this.player.y = 3838;
     }
 
     handleBatHitCollision(hitbox, bat) {
@@ -213,6 +247,30 @@ class SampleScene extends Phaser.Scene {
             spider.takeDamage(20);  // Adjust damage as needed
         } else {
             console.warn("Spider does not have takeDamage method");
+        }
+    }
+
+    handleGhostHitCollision(hitbox, ghost) {
+        if (ghost.takeDamage) {
+            ghost.takeDamage(20);  // Adjust damage as needed
+        } else {
+            console.warn("Ghost does not have takeDamage method");
+        }
+    }
+
+    handlePlayerBossCollision(player, boss) {
+        if (player.takeDamage) {
+            player.takeDamage(10);  // Adjust damage as needed
+        } else {
+            console.warn("Player does not have takeDamage method");
+        }
+    }
+
+    handleBossAttackCollision(hitbox, boss) {
+        if (boss.takeDamage) {
+            boss.takeDamage(10);  // Adjust damage as needed
+        } else {
+            console.warn("Boss does not have takeDamage method");
         }
     }
 
@@ -370,8 +428,10 @@ class SampleScene extends Phaser.Scene {
     update(time, delta) {
         this.player.update(time, delta);
         this.player.stateMachine.step();
-        this.assassinBoss.update(time, delta);
-        this.assassinBoss.stateMachine.step();
+        if (this.assassinBoss) {
+            this.assassinBoss.update(time, delta);
+            this.assassinBoss.stateMachine.step();
+        }
 
         if (Phaser.Input.Keyboard.JustDown(this.keys.p)) {
             console.log(`Player position: x=${this.player.x}, y=${this.player.y}`);
@@ -407,9 +467,19 @@ class SampleScene extends Phaser.Scene {
         if (!this.assassinBoss) {
             this.assassinBoss = new AssassinBoss(this, 6885.666666666669, 4258.807118745772, 'assassinIdle', 0);
             this.add.existing(this.assassinBoss);
+            this.backgroundMusic.stop();
+            this.isBackgroundMusicPlaying = false;
+            this.sound.play('bossSpawn', { volume: 0.6 });
             this.physics.add.existing(this.assassinBoss);
             this.physics.add.collider(this.player, this.assassinBoss.attackHitbox, this.handlePlayerBossCollision, null, this);
             this.physics.add.collider(this.player.hitbox, this.assassinBoss, this.handleBossAttackCollision, null, this);
+            this.physics.add.collider(this.player.hitbox, this.assassinBoss.attackHitbox, this.handleBossAttackCollision, null, this);
+            console.log("Assassin Boss spawned");
+            // delayed call to start playing boss music after boss spawns
+            this.time.delayedCall(11500, () => {
+                this.sound.play('bossMusic', { volume: 0.6, loop: true });
+                this.isBossMusicPlaying = true;
+            });
         }
     }
 }

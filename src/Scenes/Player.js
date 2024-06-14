@@ -10,23 +10,24 @@ class Player extends Phaser.Physics.Arcade.Sprite {
 
         // Set custom player properties
         this.direction = 'right';
-        this.playerVelocity = 500;
-        this.dashCooldown = 300;
+        this.playerVelocity = 150;
+        this.dashCooldown = 2000;  // Updated to a more reasonable cooldown
         this.hurtTimer = 500;
         this.facing = 'right';
-        this.health = 20;
-        this.maxHealth = 100;
+        this.health = 200;
+        this.maxHealth = 200;
         this.isHurt = false;
-        this.lives = 1;
+        this.lives = 0;
         this.isReviving = false;
 
-        this.canDash = true;
-        this.canUseShuriken = true;
-        this.hasUpgradedShuriken = true;
+        this.canDash = false;
+        this.canUseShuriken = false;
+        this.hasUpgradedShuriken = false;
 
-        this.basicShurikenCooldown = 100;
-        this.upgradedShurikenCooldown = 500;
+        this.basicShurikenCooldown = 3000; // Updated to a more reasonable cooldown
+        this.upgradedShurikenCooldown = 2000; // Updated to a more reasonable cooldown
         this.lastShurikenTime = 0;
+        this.lastDashTime = 0;  // Added for dash cooldown tracking
 
         this.hitbox = scene.add.rectangle(x, y + 5, 30, 10, 0xff0000, 0);
         scene.physics.add.existing(this.hitbox);
@@ -45,12 +46,17 @@ class Player extends Phaser.Physics.Arcade.Sprite {
         // Initialize health bar
         this.healthBar = scene.add.graphics();
         this.updateHealthBar();
+
+        // Initialize UI
+        this.ui = new UI(scene);
     }
 
     update(time, delta) {
         this.stateMachine.step();
         this.resetHitbox();
         this.updateHealthBar();
+        this.ui.updateShurikenCooldown(this.hasUpgradedShuriken ? this.upgradedShurikenCooldown : this.basicShurikenCooldown, this.hasUpgradedShuriken, time, this.lastShurikenTime);
+        this.ui.updateDashCooldown(this.dashCooldown, time, this.lastDashTime);
     }
 
     updateHitbox() {
@@ -84,7 +90,20 @@ class Player extends Phaser.Physics.Arcade.Sprite {
                     this.lives -= 1;
                     this.stateMachine.transition('revive');
                 } else {
-                    // Handle player death (e.g., game over logic)
+                    this.setVelocity(0);
+                    this.clearTint();
+                    this.anims.play('death');
+                    if (this.scene.isBossMusicPlaying){
+                        this.scene.sound.stopByKey('bossMusic');
+                        this.scene.isBossMusicPlaying = false;
+                    }
+                    if (this.scene.isBackgroundMusicPlaying) {
+                        this.scene.backgroundMusic.stop();
+                        this.scene.isBackgroundMusicPlaying = false;
+                    }
+                    this.scene.time.delayedCall(3200, () => { // 3 seconds delay for death animation
+                        this.scene.scene.start('GameOverScene'); // Transition to game over scene
+                    });                
                 }
             } else {
                 this.scene.time.delayedCall(this.hurtTimer, () => {
@@ -157,18 +176,37 @@ class Player extends Phaser.Physics.Arcade.Sprite {
 
         const shuriken = new Shuriken(this.scene, this.x, this.y, shurikenType, damage, piercing, velocity, this.direction);
         shuriken.setScale(0.6);
+
+        // Play the appropriate sound effect
+        if (this.hasUpgradedShuriken) {
+            this.scene.sound.play('shurikenUpgraded');
+        } else {
+            this.scene.sound.play('shurikenBasic');
+        }
     }
 
     unlockDash() {
         this.canDash = true;
+        this.ui.showDashUI();
     }
 
     unlockShuriken() {
         this.canUseShuriken = true;
+        this.ui.showShurikenUI();
     }
 
     upgradeShuriken() {
         this.hasUpgradedShuriken = true;
+        this.ui.showDashUI();
+    }
+
+    dash() {
+        const currentTime = this.scene.time.now;
+        if (currentTime - this.lastDashTime >= this.dashCooldown) {
+            this.lastDashTime = currentTime;
+            this.stateMachine.transition('dash');
+            this.scene.sound.play('dash');
+        }
     }
 }
 
@@ -189,7 +227,7 @@ class IdleState extends State {
         }
 
         if (player.canDash && Phaser.Input.Keyboard.JustDown(shift)) {
-            this.stateMachine.transition('dash');
+            player.dash();
             return;
         }
 
@@ -215,8 +253,8 @@ class MoveState extends State {
         }
 
         if (player.canDash && Phaser.Input.Keyboard.JustDown(shift)) {
-            this.stateMachine.transition('dash');
-            return;
+            player.dash();
+                return;
         }
 
         if (player.canUseShuriken && Phaser.Input.Keyboard.JustDown(c)) {
@@ -273,19 +311,24 @@ class SwingState extends State {
     }
 }
 
+
 class DashState extends State {
     enter(scene, player) {
         player.setVelocity(0);
         player.anims.play('dash');
         player.setTint(0x00AA00);
 
+        const dashDistance = player.playerVelocity * 4; // Adjust if needed
+        const dashDuration = 200; // Adjust the duration of the dash in milliseconds
+
         if (player.flipX) {
-            player.setVelocityX(-player.playerVelocity * 3);
+            player.setVelocityX(-dashDistance);
         } else {
-            player.setVelocityX(player.playerVelocity * 3);
+            player.setVelocityX(dashDistance);
         }
 
-        scene.time.delayedCall(player.dashCooldown, () => {
+        scene.time.delayedCall(dashDuration, () => {
+            player.setVelocity(0);
             player.clearTint();
             this.stateMachine.transition('idle');
         });

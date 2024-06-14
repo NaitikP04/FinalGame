@@ -15,7 +15,7 @@ let config = {
     width: 500,
     height: 300,
     zoom: 2,
-    scene: [Load, SampleScene],
+    scene: [Load, GameStartScene, SampleScene, GameOverScene, GameWinScene],
     physics: {
         default: 'arcade',
         arcade: {   
