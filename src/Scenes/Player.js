@@ -27,7 +27,12 @@ class Player extends Phaser.Physics.Arcade.Sprite {
         this.basicShurikenCooldown = 3000; 
         this.upgradedShurikenCooldown = 2000; 
         this.lastShurikenTime = 0;
-        this.lastDashTime = 0;  
+        this.lastDashTime = 0;
+        
+        // Mouse control tracking
+        this.usingMouse = false;
+        this.mouseActionX = 0;
+        this.mouseActionY = 0;  
 
         this.hitbox = scene.add.rectangle(x, y + 5, 30, 10, 0xff0000, 0);
         scene.physics.add.existing(this.hitbox);
@@ -152,24 +157,35 @@ class Player extends Phaser.Physics.Arcade.Sprite {
         const speed = 300;
 
         let velocity = new Phaser.Math.Vector2(0, 0);
-        const { left, right, up, down } = this.scene.keys;
+        
+        if (this.usingMouse) {
+            // Use mouse direction
+            const dx = this.mouseActionX - this.x;
+            const dy = this.mouseActionY - this.y;
+            velocity.x = dx;
+            velocity.y = dy;
+            this.usingMouse = false; // Reset flag
+        } else {
+            // Use keyboard direction
+            const { left, right, up, down, w, a, s, d } = this.scene.keys;
 
-        if (left.isDown) {
-            velocity.x = -speed;
-        }
-        if (right.isDown) {
-            velocity.x = speed;
-        }
-        if (up.isDown) {
-            velocity.y = -speed;
-        }
-        if (down.isDown) {
-            velocity.y = speed;
-        }
+            if (left.isDown || a.isDown) {
+                velocity.x = -speed;
+            }
+            if (right.isDown || d.isDown) {
+                velocity.x = speed;
+            }
+            if (up.isDown || w.isDown) {
+                velocity.y = -speed;
+            }
+            if (down.isDown || s.isDown) {
+                velocity.y = speed;
+            }
 
-        if (velocity.length() === 0) {
-            // Default direction if no keys are pressed
-            velocity.x = this.facing === 'left' ? -speed : speed;
+            if (velocity.length() === 0) {
+                // Default direction if no keys are pressed
+                velocity.x = this.facing === 'left' ? -speed : speed;
+            }
         }
 
         velocity.normalize().scale(speed);
@@ -219,7 +235,7 @@ class IdleState extends State {
     }
 
     execute(scene, player) {
-        const { left, right, up, down, space, shift, c } = scene.keys;
+        const { left, right, up, down, space, shift, c, w, a, s, d } = scene.keys;
 
         if (Phaser.Input.Keyboard.JustDown(space)) {
             this.stateMachine.transition('swing');
@@ -236,7 +252,7 @@ class IdleState extends State {
             return;
         }
 
-        if (left.isDown || right.isDown || up.isDown || down.isDown) {
+        if (left.isDown || right.isDown || up.isDown || down.isDown || w.isDown || a.isDown || s.isDown || d.isDown) {
             this.stateMachine.transition('move');
             return;
         }
@@ -245,7 +261,7 @@ class IdleState extends State {
 
 class MoveState extends State {
     execute(scene, player) {
-        const { left, right, up, down, space, shift, c } = scene.keys;
+        const { left, right, up, down, space, shift, c, w, a, s, d } = scene.keys;
 
         if (Phaser.Input.Keyboard.JustDown(space)) {
             this.stateMachine.transition('swing');
@@ -262,25 +278,25 @@ class MoveState extends State {
             return;
         }
 
-        if (!up.isDown && !left.isDown && !down.isDown && !right.isDown) {
+        if (!up.isDown && !left.isDown && !down.isDown && !right.isDown && !w.isDown && !a.isDown && !s.isDown && !d.isDown) {
             this.stateMachine.transition('idle');
             return;
         }
 
         let moveDirection = new Phaser.Math.Vector2(0, 0);
-        if (up.isDown) {
+        if (up.isDown || w.isDown) {
             moveDirection.y = -1;
             player.direction = 'up';
-        } else if (down.isDown) {
+        } else if (down.isDown || s.isDown) {
             moveDirection.y = 1;
             player.direction = 'down';
         }
-        if (left.isDown) {
+        if (left.isDown || a.isDown) {
             moveDirection.x = -1;
             player.direction = 'left';
             player.facing = 'left';
             player.setFlipX(true);
-        } else if (right.isDown) {
+        } else if (right.isDown || d.isDown) {
             moveDirection.x = 1;
             player.direction = 'right';
             player.facing = 'right';
@@ -296,6 +312,20 @@ class MoveState extends State {
 class SwingState extends State {
     enter(scene, player) {
         player.setVelocity(0);
+        
+        // Face mouse direction if using mouse
+        if (player.usingMouse) {
+            const dx = player.mouseActionX - player.x;
+            if (dx < 0) {
+                player.facing = 'left';
+                player.setFlipX(true);
+            } else {
+                player.facing = 'right';
+                player.setFlipX(false);
+            }
+            player.usingMouse = false; // Reset flag
+        }
+        
         player.anims.play('attack');
         player.hitbox.body.enable = true;
         player.updateHitbox();
@@ -321,10 +351,32 @@ class DashState extends State {
         const dashDistance = player.playerVelocity * 4; // Adjust if needed
         const dashDuration = 200; // Adjust the duration of the dash in milliseconds
 
-        if (player.flipX) {
-            player.setVelocityX(-dashDistance);
+        if (player.usingMouse) {
+            // Dash toward mouse
+            const dx = player.mouseActionX - player.x;
+            const dy = player.mouseActionY - player.y;
+            const angle = Math.atan2(dy, dx);
+            
+            player.setVelocityX(Math.cos(angle) * dashDistance);
+            player.setVelocityY(Math.sin(angle) * dashDistance);
+            
+            // Face the dash direction
+            if (dx < 0) {
+                player.facing = 'left';
+                player.setFlipX(true);
+            } else {
+                player.facing = 'right';
+                player.setFlipX(false);
+            }
+            
+            player.usingMouse = false; // Reset flag
         } else {
-            player.setVelocityX(dashDistance);
+            // Dash in facing direction (keyboard)
+            if (player.flipX) {
+                player.setVelocityX(-dashDistance);
+            } else {
+                player.setVelocityX(dashDistance);
+            }
         }
 
         scene.time.delayedCall(dashDuration, () => {

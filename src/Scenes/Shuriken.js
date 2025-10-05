@@ -31,9 +31,7 @@ class Shuriken extends Phaser.Physics.Arcade.Sprite {
     }
 
     handleCollision(shuriken, enemy) {
-        console.log(`Shuriken hit! Damage: ${this.damage}, Piercing: ${shuriken.piercing}`);
         enemy.takeDamage(this.damage);
-        console.log(`Enemy health after hit: ${enemy.hp}`);
         shuriken.piercing--;
         if (shuriken.piercing <= 0) {
             shuriken.destroy();

@@ -33,13 +33,11 @@ class Ghost extends Phaser.Physics.Arcade.Sprite {
     }
 
     debuffPlayer(player) {
-        console.log('Player debuffed!');
         const originalSpeed = 150;
         player.playerVelocity = this.debuffSpeed;
 
         this.scene.time.delayedCall(this.debuffDuration, () => {
             player.playerVelocity = originalSpeed;
-            console.log('Player debuff expired!');
         });
     }
 

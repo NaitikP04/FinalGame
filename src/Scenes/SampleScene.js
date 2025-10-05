@@ -143,6 +143,47 @@ class SampleScene extends Phaser.Scene {
         this.keys = this.input.keyboard.createCursorKeys();
         this.keys.c = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.C);
         this.keys.p = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.P);
+        
+        // Add WASD controls
+        this.keys.w = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
+        this.keys.a = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
+        this.keys.s = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
+        this.keys.d = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
+        
+        // Set up mouse input
+        this.input.on('pointerdown', (pointer) => {
+            if (pointer.leftButtonDown()) {
+                // Left click for melee attack
+                if (this.player.stateMachine.state === 'idle' || this.player.stateMachine.state === 'move') {
+                    // Store mouse world position for attack direction
+                    this.player.mouseActionX = pointer.worldX;
+                    this.player.mouseActionY = pointer.worldY;
+                    this.player.usingMouse = true;
+                    this.player.stateMachine.transition('swing');
+                }
+            } else if (pointer.rightButtonDown()) {
+                // Right click for shuriken
+                if (this.player.canUseShuriken && (this.player.stateMachine.state === 'idle' || this.player.stateMachine.state === 'move')) {
+                    // Store mouse world position for shuriken direction
+                    this.player.mouseActionX = pointer.worldX;
+                    this.player.mouseActionY = pointer.worldY;
+                    this.player.usingMouse = true;
+                    this.player.stateMachine.transition('shoot');
+                }
+            } else if (pointer.middleButtonDown()) {
+                // Middle click for dash
+                if (this.player.canDash && (this.player.stateMachine.state === 'idle' || this.player.stateMachine.state === 'move')) {
+                    // Store mouse world position for dash direction
+                    this.player.mouseActionX = pointer.worldX;
+                    this.player.mouseActionY = pointer.worldY;
+                    this.player.usingMouse = true;
+                    this.player.dash();
+                }
+            }
+        });
+        
+        // Disable right-click context menu
+        this.input.mouse.disableContextMenu();
 
         // Set up camera
         this.cameras.main.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
@@ -191,8 +232,10 @@ class SampleScene extends Phaser.Scene {
         this.inBossLayer = false;
 
         this.timeSinceLastSpawn = 0;
-        this.timeSinceLastSpawn = 0;
         this.spawnDelay = 5000; // Delay between waves in milliseconds
+        
+        // Initialize navigation system
+        this.initializeNavigationSystem();
 
         //skip mode 
         this.keys.u = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.U);
@@ -345,13 +388,11 @@ class SampleScene extends Phaser.Scene {
         }
     
         this.spawnWave();
-        console.log(`Entering ${layerType} Layer and starting wave ${this.waveIndex[layerType] + 1}`)
     }
 
     stopSpawning() {
         this.isSpawning = false;
         // this.timeSinceLastSpawn = 0;
-        console.log(`Stopping spawning in ${this.currentLayer} Layer`);
     }
 
     spawnWave() {
@@ -360,12 +401,10 @@ class SampleScene extends Phaser.Scene {
         const waveIndex = this.waveIndex[this.currentLayer];
         if (waveIndex < this.waveConfigurations[this.currentLayer].length) {
             const wave = this.waveConfigurations[this.currentLayer][waveIndex];
-            console.log(`Spawning wave ${waveIndex + 1} in ${this.currentLayer} Layer`);
             this.spawnEnemies(wave);
             this.waveIndex[this.currentLayer]++;
             this.timeSinceLastSpawn = 0;
         } else {
-            console.log(`Finished all waves in ${this.currentLayer} Layer`);
             this.stopSpawning();
         }
     }
@@ -426,7 +465,7 @@ class SampleScene extends Phaser.Scene {
         }
 
         if (Phaser.Input.Keyboard.JustDown(this.keys.p)) {
-            console.log(`Player position: x=${this.player.x}, y=${this.player.y}`);
+            // Player position debug removed
         }
 
         Phaser.Actions.Call(this.bats.getChildren(), bat => {
@@ -451,8 +490,188 @@ class SampleScene extends Phaser.Scene {
                 this.timeSinceLastSpawn = 0;
             }
         }
+        
+        // Update navigation arrow
+        this.updateNavigationArrow(delta);
     }
 
+    initializeNavigationSystem() {
+        // Create objective queue
+        this.objectives = [];
+        
+        // Add dash pickup if exists
+        if (this.dash.length > 0) {
+            this.objectives.push({ type: 'dash', target: this.dash[0], name: 'DASH ABILITY', icon: 'dash' });
+        }
+        
+        // Add basic shuriken if exists
+        if (this.basicShurikens.length > 0) {
+            this.objectives.push({ type: 'shuriken', target: this.basicShurikens[0], name: 'SHURIKEN', icon: 'shuriken', frame: 5 });
+        }
+        
+        // Add upgraded shuriken if exists
+        if (this.upgradedShurikens.length > 0) {
+            this.objectives.push({ type: 'shurikenUpgrade', target: this.upgradedShurikens[0], name: 'SHURIKEN UPGRADE', icon: 'shuriken', frame: 0 });
+        }
+        
+        // Boss location (will be added when boss spawns)
+        this.bossLocation = { x: 6885, y: 4258 };
+        
+        // Create navigation arrow
+        this.navArrow = this.add.graphics();
+        this.navArrow.setDepth(1000);
+        this.arrowBlinkTimer = 0;
+        this.arrowVisible = true;
+        
+        // Create objective icon (appears near player)
+        this.objectiveIcon = this.add.image(0, 0, 'dash').setOrigin(0.5).setDepth(1001).setVisible(false);
+        this.objectiveIcon.setScale(0.4); // Smaller than cooldown UI icons
+        
+        // Create objective text for boss only (smaller text near icon)
+        this.objectiveText = this.add.text(0, 0, '', {
+            fontSize: '10px',
+            fill: '#ff0000',
+            fontFamily: 'monospace',
+            stroke: '#000',
+            strokeThickness: 3,
+            align: 'center'
+        }).setOrigin(0.5).setDepth(1001).setVisible(false);
+        
+        this.currentObjectiveIndex = 0;
+    }
+    
+    updateNavigationArrow(delta) {
+        if (!this.navArrow || this.objectives.length === 0) return;
+        
+        // Update blink timer
+        this.arrowBlinkTimer += delta;
+        if (this.arrowBlinkTimer > 500) {
+            this.arrowBlinkTimer = 0;
+            this.arrowVisible = !this.arrowVisible;
+        }
+        
+        // Clear previous arrow
+        this.navArrow.clear();
+        
+        if (!this.arrowVisible) {
+            this.objectiveIcon.setVisible(false);
+            this.objectiveText.setVisible(false);
+            return;
+        }
+        
+        // Get current objective
+        let targetX, targetY, objectiveData;
+        if (this.currentObjectiveIndex < this.objectives.length) {
+            const objective = this.objectives[this.currentObjectiveIndex];
+            if (objective.target && objective.target.active) {
+                targetX = objective.target.x;
+                targetY = objective.target.y;
+                objectiveData = objective;
+            } else {
+                // Objective collected, move to next
+                this.currentObjectiveIndex++;
+                return;
+            }
+        } else if (!this.assassinBoss) {
+            // All objectives collected, point to boss area
+            targetX = this.bossLocation.x;
+            targetY = this.bossLocation.y;
+            objectiveData = { name: 'BOSS', icon: null }; // No icon, use text
+        } else {
+            // Boss spawned, point to boss
+            targetX = this.assassinBoss.x;
+            targetY = this.assassinBoss.y;
+            objectiveData = { name: 'BOSS', icon: null }; // No icon, use text
+            
+            // Hide arrow when boss is defeated
+            if (this.assassinBoss.hp <= 0) {
+                this.objectiveIcon.setVisible(false);
+                this.objectiveText.setVisible(false);
+                return;
+            }
+        }
+        
+        // Calculate direction from player to target
+        const dx = targetX - this.player.x;
+        const dy = targetY - this.player.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        // Only show arrow if target is far enough
+        if (distance < 100) {
+            this.objectiveIcon.setVisible(false);
+            this.objectiveText.setVisible(false);
+            return;
+        }
+        
+        const angle = Math.atan2(dy, dx);
+        
+        // Position arrow around player (offset from center)
+        const arrowDistance = 40;
+        const arrowX = this.player.x + Math.cos(angle) * arrowDistance;
+        const arrowY = this.player.y + Math.sin(angle) * arrowDistance;
+        
+        // Show objective icon/text near the arrow (further out from arrow)
+        if (distance > 50) {
+            const iconDistance = arrowDistance + 25; // Position icon beyond the arrow
+            const iconX = this.player.x + Math.cos(angle) * iconDistance;
+            const iconY = this.player.y + Math.sin(angle) * iconDistance;
+            
+            if (objectiveData.icon) {
+                // Show icon for pickups near the arrow
+                this.objectiveIcon.setTexture(objectiveData.icon);
+                if (objectiveData.frame !== undefined) {
+                    this.objectiveIcon.setFrame(objectiveData.frame);
+                }
+                this.objectiveIcon.setPosition(iconX, iconY);
+                this.objectiveIcon.setVisible(true);
+                this.objectiveText.setVisible(false);
+            } else {
+                // Show text for boss near the arrow
+                this.objectiveText.setText(objectiveData.name);
+                this.objectiveText.setPosition(iconX, iconY);
+                this.objectiveText.setVisible(true);
+                this.objectiveIcon.setVisible(false);
+            }
+        } else {
+            this.objectiveIcon.setVisible(false);
+            this.objectiveText.setVisible(false);
+        }
+        
+        // Draw pixelated arrow
+        this.navArrow.lineStyle(3, 0xffff00);
+        this.navArrow.fillStyle(0xffff00);
+        
+        // Arrow shaft
+        const shaftLength = 15;
+        const shaftEndX = arrowX + Math.cos(angle) * shaftLength;
+        const shaftEndY = arrowY + Math.sin(angle) * shaftLength;
+        
+        // Draw thick pixelated line
+        this.navArrow.fillRect(arrowX - 1.5, arrowY - 1.5, 3, 3);
+        this.navArrow.fillRect(shaftEndX - 1.5, shaftEndY - 1.5, 3, 3);
+        
+        // Connect with rectangles for pixelated look
+        const steps = 5;
+        for (let i = 0; i <= steps; i++) {
+            const t = i / steps;
+            const px = arrowX + (shaftEndX - arrowX) * t;
+            const py = arrowY + (shaftEndY - arrowY) * t;
+            this.navArrow.fillRect(px - 1.5, py - 1.5, 3, 3);
+        }
+        
+        // Arrowhead
+        const headSize = 8;
+        const headAngle = Math.PI / 6;
+        
+        const leftX = shaftEndX + Math.cos(angle + Math.PI - headAngle) * headSize;
+        const leftY = shaftEndY + Math.sin(angle + Math.PI - headAngle) * headSize;
+        const rightX = shaftEndX + Math.cos(angle - Math.PI + headAngle) * headSize;
+        const rightY = shaftEndY + Math.sin(angle - Math.PI + headAngle) * headSize;
+        
+        // Draw arrowhead as pixelated triangles
+        this.navArrow.fillTriangle(shaftEndX, shaftEndY, leftX, leftY, rightX, rightY);
+    }
+    
     spawnBoss() {
         this.stopSpawning();
         if (!this.assassinBoss) {
@@ -465,7 +684,6 @@ class SampleScene extends Phaser.Scene {
             this.physics.add.collider(this.player, this.assassinBoss.attackHitbox, this.handlePlayerBossCollision, null, this);
             this.physics.add.collider(this.player.hitbox, this.assassinBoss, this.handleBossAttackCollision, null, this);
             this.physics.add.collider(this.player.hitbox, this.assassinBoss.attackHitbox, this.handleBossAttackCollision, null, this);
-            console.log("Assassin Boss spawned");
             this.time.delayedCall(11500, () => {
                 this.sound.play('bossMusic', { volume: 0.6, loop: true });
                 this.isBossMusicPlaying = true;

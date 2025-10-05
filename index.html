@@ -3,7 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Final Game</title>
+    <title>Shinobi Survivors</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #1a1a2e;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+        }
+        #phaser-game {
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+    </style>
     <script src="./lib/phaser.js"></script>
     <script src="./src/Scenes/Load.js"></script>
     <script src="./lib/StateMachine.js"></script>
